@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://upliftorch.com/tools/screenshot-stitch/en/">
+<link rel="alternate" hreflang="zh-TW" href="https://upliftorch.com/tools/screenshot-stitch/">
+<link rel="alternate" hreflang="en" href="https://upliftorch.com/tools/screenshot-stitch/en/">
+<link rel="alternate" hreflang="x-default" href="https://upliftorch.com/tools/screenshot-stitch/en/">
+<title>Screenshot Stitcher — Free Online Image Stitching Tool | ScreenshotStitch</title>
+<meta name="description" content="Free online screenshot stitcher with automatic duplicate-content removal, crop and privacy redaction. Merge images vertically or horizontally and export PNG, JPEG, or PDF in your browser.">
+<meta name="keywords" content="screenshot stitch,combine screenshots,merge images,remove duplicate screenshot content,redact screenshot,crop screenshot,export screenshot PDF,long screenshot">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+<meta property="og:title" content="Screenshot Stitcher — Free Online Image Stitching">
+<meta property="og:description" content="Merge screenshots, remove duplicate content, crop, redact sensitive details, and export PNG, JPEG, or PDF in your browser.">
+<meta property="og:type" content="website">
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;
+  --border:#e2e8f0;--primary:#f59e0b;--primary-dark:#d97706;
+  --primary-light:rgba(245,158,11,.1);--radius:14px;
+  --shadow:0 2px 12px rgba(0,0,0,.06);--danger:#ef4444;--success:#22c55e;
+  --header-bg:linear-gradient(135deg,#d97706,#f59e0b,#fbbf24);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--text:#e2e8f0;--text-secondary:#94a3b8;
+  --border:#334155;--primary:#fbbf24;--primary-dark:#fcd34d;
+  --primary-light:rgba(245,158,11,.15);--shadow:0 2px 16px rgba(0,0,0,.3);
+  --header-bg:linear-gradient(135deg,#78350f,#92400e,#b45309);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+a{color:var(--primary);text-decoration:none}a:hover{text-decoration:underline}
+
+header{background:var(--header-bg);color:#fff;padding:0 20px}
+.header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand h1{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.brand h1 span{opacity:.85;font-weight:400}
+.header-actions{display:flex;align-items:center;gap:12px}
+.lang-switch{color:#fff;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:8px;font-size:13px;font-weight:600;transition:.2s}
+.lang-switch:hover{background:rgba(255,255,255,.35);text-decoration:none}
+.theme-toggle{background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:10px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;justify-content:center}
+.theme-toggle:hover{background:rgba(255,255,255,.35)}
+
+.container{max-width:960px;margin:0 auto;padding:32px 20px}
+.breadcrumb{font-size:13px;color:var(--text-secondary,#64748b);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.breadcrumb a{color:var(--text-secondary,#64748b)}
+.breadcrumb a:hover{color:var(--primary,#ec4899)}
+.breadcrumb .sep{opacity:.5}
+.breadcrumb [aria-current]{color:var(--text,#1e293b);font-weight:600}
+
+.upload-area{border:2.5px dashed var(--border);border-radius:var(--radius);padding:48px 24px;text-align:center;cursor:pointer;transition:.3s;background:var(--surface)}
+.upload-area:hover,.upload-area.dragover{border-color:var(--primary);background:var(--primary-light)}
+.upload-area .icon{margin-bottom:12px;display:flex;justify-content:center;color:var(--primary)}
+.upload-area h2{font-size:20px;margin-bottom:8px}
+.upload-area p{color:var(--text-secondary);font-size:14px}
+#fileInput{display:none}
+
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:24px 0;padding:20px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow)}
+.control-group{display:flex;align-items:center;gap:8px;flex:1;min-width:160px}
+.control-group--duplicate{flex:1 1 340px;min-width:340px}
+.control-group label{font-size:14px;font-weight:600;white-space:nowrap}
+.control-group input[type="range"]{flex:1;accent-color:var(--primary)}
+.control-group input[type="color"]{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:none;padding:2px}
+.quality-val{font-size:14px;font-weight:700;color:var(--primary);min-width:36px}
+.format-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:14px;cursor:pointer}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.9}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-sm{padding:6px 14px;font-size:13px;border-radius:8px}
+
+.image-list{margin:16px 0;display:flex;flex-direction:column;gap:8px}
+.image-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);cursor:grab;transition:.2s}
+.image-item:active{cursor:grabbing;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.image-item.dragging{opacity:.4}
+.image-item .priority{flex:none;width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.image-item img{width:60px;height:45px;object-fit:cover;border-radius:6px;background:var(--bg)}
+.image-item .info{flex:1;font-size:13px;min-width:0}
+.image-item .info .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.image-item .info .dims{color:var(--text-secondary);font-size:12px;margin-top:2px}
+.drag-handle{font-size:18px;color:var(--text-secondary);cursor:grab}
+
+.preview-area{margin:24px 0;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;text-align:center}
+.zoom-controls{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px}
+.zoom-controls button{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.2s}
+.zoom-controls button:hover{border-color:var(--primary);color:var(--primary)}
+.zoom-val{font-size:14px;font-weight:700;color:var(--primary);min-width:48px;text-align:center}
+.canvas-viewport{overflow:auto;max-height:600px;border:1px solid var(--border);border-radius:8px;cursor:grab;position:relative}
+.canvas-viewport:active{cursor:grabbing}
+.canvas-viewport canvas{transform-origin:top left;display:block}
+.editing-toolbar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.editing-toolbar .format-select{min-height:38px}
+.btn.is-active{background:var(--text);border-color:var(--text);color:var(--surface)}
+.tool-status{margin:12px 0 0;color:var(--text-secondary);font-size:13px;min-height:21px}
+.tool-status.is-success{color:var(--success)}
+.tool-status.is-error{color:var(--danger)}
+#overlapStatus{min-width:155px;font-size:12px;font-weight:600}
+.overlap-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--primary-light);color:var(--primary);font-size:11px;font-weight:700}
+.crop-modal{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.72)}
+.crop-dialog{width:min(460px,100%);background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 20px 60px rgba(15,23,42,.35);padding:24px}
+.crop-dialog h2{font-size:20px;margin-bottom:6px}
+.crop-dialog>p{color:var(--text-secondary);font-size:13px;margin-bottom:18px}
+.crop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.crop-grid label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
+.crop-grid input{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+.crop-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:40px 0}
+.feature-card{background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);text-align:center}
+.feature-card .feat-icon{font-size:36px;margin-bottom:12px}
+.feature-card h3{font-size:16px;margin-bottom:8px}
+.feature-card p{font-size:14px;color:var(--text-secondary)}
+
+.faq{margin:40px 0}
+.faq h2{font-size:22px;margin-bottom:20px;text-align:center}
+.faq-item{background:var(--surface);border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.faq-q{padding:16px 20px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.faq-q::after{content:"▼";font-size:12px;color:var(--text-secondary);transition:.3s}
+.faq-item.open .faq-q::after{transform:rotate(180deg)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height .3s,padding .3s;font-size:14px;color:var(--text-secondary)}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:300px}
+
+.articles{margin:40px 0}
+.articles h2{font-size:22px;margin-bottom:20px;text-align:center}
+.article-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.article-card{background:var(--surface);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:transform .2s,box-shadow .2s;display:block;border:1px solid var(--border)}
+.article-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1);text-decoration:none}
+.article-card h3{font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text)}
+.article-card p{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.article-card .tag{display:inline-block;font-size:11px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;margin-top:10px;font-weight:600}
+
+footer{border-top:1px solid var(--border);padding:24px 20px;text-align:center;font-size:13px;color:var(--text-secondary);margin-top:40px}
+footer nav a{color:var(--text-secondary);margin:0 6px}footer nav a:hover{color:var(--primary)}
+
+.hidden{display:none!important}
+
+@media(min-width:1360px){
+}
+
+@media(max-width:767px){
+  .feature-grid{grid-template-columns:1fr}
+  .article-grid{grid-template-columns:1fr}
+  .controls{flex-direction:column;align-items:stretch}
+  .control-group{min-width:auto}
+  .control-group--duplicate{width:100%;min-width:0;max-width:100%;flex-basis:auto;flex-wrap:wrap}
+  .control-group--duplicate #overlapStatus{flex-basis:100%}
+  .crop-grid{grid-template-columns:1fr}
+}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Screenshot Stitcher","url":"https://upliftorch.com/tools/screenshot-stitch/en/","description":"Free browser-based screenshot stitcher with automatic duplicate-content removal, cropping, privacy redaction, and PNG, JPEG, or PDF export","applicationCategory":"UtilityApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://upliftorch.com/"},{"@type":"ListItem","position":2,"name":"Free Online Tools","item":"https://upliftorch.com/tools-en"},{"@type":"ListItem","position":3,"name":"Screenshot Stitcher","item":"https://upliftorch.com/tools/screenshot-stitch/en/"}]}
+</script>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand"><h1>Screenshot<span>Stitch</span></h1></div>
+    <div class="header-actions">
+      <a href="https://upliftorch.com/tools/screenshot-stitch/" class="lang-switch">繁中</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </div>
+</header>
+
+
+
+
+<div class="container">
+
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="https://upliftorch.com/">Home</a>
+    <span class="sep">›</span>
+    <a href="https://upliftorch.com/tools-en">Free Online Tools</a>
+    <span class="sep">›</span>
+    <span aria-current="page">Screenshot Stitcher</span>
+  </nav>
+
+  <div class="upload-area" id="uploadArea">
+    <div class="icon"><svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6m-3-3 3-3 3 3"/></svg></div>
+    <h2>Drag & drop screenshots here, or click to select</h2>
+    <p>Supports JPG, PNG, WebP — 2 to 20 screenshots</p>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+  </div>
+
+  <div class="controls hidden" id="controls">
+    <div class="control-group" style="flex:0 0 100%">
+      <label>Direction</label>
+      <select class="format-select" id="directionSelect">
+        <option value="vertical">Vertical (top to bottom)</option>
+        <option value="horizontal">Horizontal (left to right)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Gap</label>
+      <input type="range" id="gapSlider" min="0" max="20" value="0">
+      <span class="quality-val" id="gapVal">0px</span>
+    </div>
+    <div class="control-group">
+      <label>Background</label>
+      <input type="color" id="bgColor" value="#ffffff">
+    </div>
+    <div class="control-group control-group--duplicate">
+      <label for="autoOverlap">Remove duplicate content</label>
+      <input type="checkbox" id="autoOverlap" checked>
+      <span class="quality-val" id="overlapStatus">On</span>
+    </div>
+    <div class="control-group">
+      <label for="outputFormat">Output</label>
+      <select class="format-select" id="outputFormat">
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+        <option value="pdf">PDF</option>
+      </select>
+    </div>
+    <div class="control-group hidden" id="qualityControl">
+      <label for="qualitySlider">Quality</label>
+      <input type="range" id="qualitySlider" min="60" max="100" value="92">
+      <span class="quality-val" id="qualityVal">92%</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" id="stitchBtn"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.74-6.26L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-15.74 6.26L3 16"/><path d="M8 16H3v5"/></svg>Arrange</button>
+      <button class="btn btn-outline" id="addMoreBtn">+ Add More</button>
+      <button class="btn btn-danger btn-sm" id="clearBtn">✕ Clear</button>
+    </div>
+  </div>
+
+  <div class="image-list hidden" id="imageList"></div>
+
+  <div class="preview-area hidden" id="previewArea">
+    <div class="editing-toolbar" aria-label="Privacy editing tools">
+      <button class="btn btn-outline" id="redactBtn" type="button">Redact sensitive info</button>
+      <select class="format-select" id="redactStyle" aria-label="Redaction style">
+        <option value="pixelate">Pixelate</option>
+        <option value="black">Black box</option>
+      </select>
+      <button class="btn btn-outline" id="undoRedactBtn" type="button" disabled>Undo redaction</button>
+    </div>
+    <div class="zoom-controls">
+      <button id="zoomOutBtn" title="Zoom out">−</button>
+      <span class="zoom-val" id="zoomVal">100%</span>
+      <button id="zoomInBtn" title="Zoom in">+</button>
+      <button id="zoomResetBtn" title="Reset zoom" style="font-size:13px;width:auto;padding:0 10px">Fit</button>
+    </div>
+    <div class="canvas-viewport" id="canvasViewport">
+      <canvas id="previewCanvas"></canvas>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:center;gap:8px">
+      <button class="btn btn-primary" id="downloadBtn">Download stitched image</button>
+    </div>
+    <p class="tool-status" id="toolStatus" role="status" aria-live="polite"></p>
+  </div>
+
+  <div class="crop-modal hidden" id="cropModal" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+    <div class="crop-dialog">
+      <h2 id="cropTitle">Crop screenshot</h2>
+      <p id="cropFileName"></p>
+      <div class="crop-grid">
+        <label>Top (px)<input type="number" id="cropTop" min="0" step="1" value="0"></label>
+        <label>Right (px)<input type="number" id="cropRight" min="0" step="1" value="0"></label>
+        <label>Bottom (px)<input type="number" id="cropBottom" min="0" step="1" value="0"></label>
+        <label>Left (px)<input type="number" id="cropLeft" min="0" step="1" value="0"></label>
+      </div>
+      <div class="crop-actions">
+        <button class="btn btn-outline" id="cancelCropBtn" type="button">Cancel</button>
+        <button class="btn btn-primary" id="applyCropBtn" type="button">Apply crop</button>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <svg class="feat-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-left:auto;margin-right:auto;color:var(--primary,var(--primary-color,#0f86b5))"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg>
+      <h3>100% Private</h3>
+      <p>All stitching happens locally in your browser. No files are ever uploaded to any server.</p>
+    </div>
+    <div class="feature-card">
+      <svg class="feat-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-left:auto;margin-right:auto;color:var(--primary,var(--primary-color,#0f86b5))"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>
+      <h3>Two Directions</h3>
+      <p>Stitch vertically or horizontally to fit different use cases and layouts.</p>
+    </div>
+    <div class="feature-card">
+      <svg class="feat-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-left:auto;margin-right:auto;color:var(--primary,var(--primary-color,#0f86b5))"><path d="M7 7h12l-3-3M17 17H5l3 3M19 7l-3 3M5 17l3-3"/></svg>
+      <h3>Drag to Reorder</h3>
+      <p>Drag and drop to rearrange screenshot order before stitching.</p>
+    </div>
+    <div class="feature-card">
+      <svg class="feat-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-left:auto;margin-right:auto;color:var(--primary,var(--primary-color,#0f86b5))"><path d="M4 18 18 4l2 2L6 20l-2-2Z"/><path d="m11 11 2 2M14 8l2 2M8 14l2 2"/></svg>
+      <h3>Automatically remove duplicate content</h3>
+      <p>Detect and remove repeated areas between adjacent screenshots for a cleaner long image.</p>
+    </div>
+    <div class="feature-card">
+      <svg class="feat-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-left:auto;margin-right:auto;color:var(--primary,var(--primary-color,#0f86b5))"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 5h4M11 18.5h2"/></svg>
+      <h3>Crop and Redact</h3>
+      <p>Crop each source image, then pixelate or cover sensitive details directly in the preview.</p>
+    </div>
+    <div class="feature-card">
+      <svg class="feat-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin-left:auto;margin-right:auto;color:var(--primary,var(--primary-color,#0f86b5))"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.6-1.7M12 14v2M19 3v3M17.5 4.5h3"/></svg>
+      <h3>PNG, JPEG, or PDF</h3>
+      <p>Choose lossless PNG, compact JPEG, or a paginated PDF with no watermark.</p>
+    </div>
+  </div>
+
+  <div class="articles">
+    <h2>Related Articles</h2>
+    <div class="article-grid">
+      <a href="https://upliftorch.com/tools/screenshot-stitch/en/blog/screenshot-tips.html" class="article-card">
+        <h3>Screenshot Tips and Techniques: The Complete Guide</h3>
+        <p>From keyboard shortcuts to advanced tools — master screenshot methods for Windows, macOS, and Chrome. Dramatically boost your screenshot efficiency.</p>
+        <span class="tag">Beginner Guide</span>
+      </a>
+      <a href="https://upliftorch.com/tools/screenshot-stitch/en/blog/long-screenshot-guide.html" class="article-card">
+        <h3>How to Create Long Screenshots: Capture Entire Web Pages</h3>
+        <p>Practical methods for capturing entire web pages or long conversation threads in a single image. Solutions for mobile and desktop platforms compiled in one place.</p>
+        <span class="tag">Tutorial</span>
+      </a>
+      <a href="https://upliftorch.com/tools/screenshot-stitch/en/blog/image-stitching-technology.html" class="article-card">
+        <h3>Image Stitching Technology Explained: From Feature Matching to Panoramas</h3>
+        <p>A deep dive into the computer vision technology behind image stitching — feature detection, matching algorithms, and image blending methods.</p>
+        <span class="tag">Technical</span>
+      </a>
+      <a href="https://upliftorch.com/tools/screenshot-stitch/en/blog/visual-documentation.html" class="article-card">
+        <h3>Visual Documentation Best Practices</h3>
+        <p>Leverage screenshots and visual elements to improve documentation quality. From technical docs to user guides, master the core principles of visual recording.</p>
+        <span class="tag">Best Practices</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="faq">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-item"><div class="faq-q">How many screenshots can I stitch?</div><div class="faq-a">You can stitch up to 20 screenshots at once. For more, stitch in batches and combine the results.</div></div>
+    <div class="faq-item"><div class="faq-q">Can I stitch images of different sizes?</div><div class="faq-a">Yes. For vertical stitching, images are centered based on the widest image. For horizontal, they are centered based on the tallest image.</div></div>
+    <div class="faq-item"><div class="faq-q">Are my screenshots uploaded anywhere?</div><div class="faq-a">No. All processing happens entirely in your browser. Your screenshots never leave your device.</div></div>
+    <div class="faq-item"><div class="faq-q">How do I reorder screenshots?</div><div class="faq-a">After uploading, simply drag and drop the screenshot items to rearrange their order before stitching.</div></div>
+    <div class="faq-item"><div class="faq-q">How does automatic duplicate-content removal work?</div><div class="faq-a">The tool compares the end of one screenshot with the beginning of the next and removes the matching repeated area. You can turn it off before arranging if you want to keep every pixel.</div></div>
+    <div class="faq-item"><div class="faq-q">What output formats are available?</div><div class="faq-a">Choose PNG for lossless quality, JPEG for a smaller file, or PDF for a document split across standard pages.</div></div>
+  </div>
+
+</div>
+
+
+
+<footer>
+  <nav>
+    <a href="index.html">Home</a> ·
+    <a href="https://upliftorch.com/privacy-policy?lang=en">Privacy</a> ·
+    <a href="https://upliftorch.com/terms-of-service?lang=en">Terms</a>
+  </nav>
+  <p style="margin-top:8px">Screenshot Stitcher — all processing in browser, no files uploaded</p>
+  <p style="margin-top:4px;font-size:12px">&copy; <script>document.write(new Date().getFullYear())</script> Upliftorch. All rights reserved.</p>
+  <p style="margin-top:8px;font-size:13px">
+    <span style="color:#999">Other Tools: </span>
+    <a href="https://upliftorch.com/tools/image-compress/en/">Image Compress</a> ·
+    <a href="https://upliftorch.com/tools/image-resize/en/">Image Resize</a> ·
+    <a href="https://upliftorch.com/tools/image-watermark/en/">Image Watermark</a> ·
+    <a href="https://upliftorch.com/tools/qr-code/en/">QR Code Generator</a>
+  </p>
+</footer>
+
+<script>
+
+
+
+
+
+/* Dark Mode */
+const themeToggle = document.getElementById('themeToggle');
+const moonIcon = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>';
+const sunIcon = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+const saved = localStorage.getItem('theme');
+if (saved) {
+  document.documentElement.setAttribute('data-theme', saved);
+  themeToggle.innerHTML = saved === 'dark' ? sunIcon : moonIcon;
+} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-theme', 'dark');
+  themeToggle.innerHTML = sunIcon;
+} else {
+  themeToggle.innerHTML = moonIcon;
+}
+themeToggle.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  themeToggle.innerHTML = isDark ? moonIcon : sunIcon;
+});
+
+/* State */
+const images = [];
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const controls = document.getElementById('controls');
+const imageList = document.getElementById('imageList');
+const previewArea = document.getElementById('previewArea');
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+const gapSlider = document.getElementById('gapSlider');
+const gapVal = document.getElementById('gapVal');
+const directionSelect = document.getElementById('directionSelect');
+const bgColor = document.getElementById('bgColor');
+const autoOverlap = document.getElementById('autoOverlap');
+const overlapStatus = document.getElementById('overlapStatus');
+const outputFormat = document.getElementById('outputFormat');
+const qualitySlider = document.getElementById('qualitySlider');
+const qualityVal = document.getElementById('qualityVal');
+const qualityControl = document.getElementById('qualityControl');
+const toolStatus = document.getElementById('toolStatus');
+const redactBtn = document.getElementById('redactBtn');
+const redactStyle = document.getElementById('redactStyle');
+const undoRedactBtn = document.getElementById('undoRedactBtn');
+const cropModal = document.getElementById('cropModal');
+let redactMode = false;
+let draftRedaction = null;
+let redactionHistory = [];
+let editingCropIndex = -1;
+const addMoreInput = document.createElement('input');
+addMoreInput.type = 'file';
+addMoreInput.accept = 'image/*';
+addMoreInput.multiple = true;
+addMoreInput.style.display = 'none';
+document.body.appendChild(addMoreInput);
+
+
+
+function showToolStatus(message, type = '') {
+  toolStatus.textContent = message;
+  toolStatus.className = `tool-status${type ? ` is-${type}` : ''}`;
+}
+
+/* Upload */
+uploadArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+document.getElementById('addMoreBtn').addEventListener('click', () => addMoreInput.click());
+addMoreInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+function handleFiles(fileList) {
+  const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  const remaining = 20 - images.length;
+  const toAdd = imageFiles.slice(0, remaining);
+  if (toAdd.length === 0) {
+    trackToolEvent('tool_error', { error_type: 'invalid_or_excess_files' });
+    return;
+  }
+
+  let loaded = 0;
+  let settled = 0;
+  const loadedItems = new Array(toAdd.length);
+  const finishBatch = () => {
+    settled++;
+    if (settled === toAdd.length && loaded > 0) {
+      images.push(...loadedItems.filter(Boolean));
+      controls.classList.remove('hidden');
+      imageList.classList.remove('hidden');
+      applyAutoOverlap();
+      arrangeImages();
+      renderImageList();
+      autoRender();
+      trackToolEvent('file_selected', { file_count: loaded });
+    }
+  };
+  toAdd.forEach((f, fileIndex) => {
+    const img = new Image();
+    const url = URL.createObjectURL(f);
+    img.onload = () => {
+      loadedItems[fileIndex] = {
+        img,
+        name: f.name,
+        originalWidth: img.naturalWidth,
+        originalHeight: img.naturalHeight,
+        sourceX: 0,
+        sourceY: 0,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        crop: { top: 0, right: 0, bottom: 0, left: 0 },
+        autoOverlap: 0,
+        redactions: [],
+        x: 0,
+        y: 0
+      };
+      URL.revokeObjectURL(url);
+      loaded++;
+      finishBatch();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      trackToolEvent('tool_error', { error_type: 'image_decode_failed' });
+      finishBatch();
+    };
+    img.src = url;
+  });
+  fileInput.value = '';
+  addMoreInput.value = '';
+}
+
+let dragSrcIdx = -1;
+function escapeHtml(value) {
+  const span = document.createElement('span');
+  span.textContent = value;
+  return span.innerHTML;
+}
+
+function renderImageList() {
+  imageList.innerHTML = '';
+  images.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'image-item';
+    div.draggable = true;
+    div.dataset.index = i;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 60; tempCanvas.height = 45;
+    tempCanvas.getContext('2d').drawImage(item.img, 0, 0, 60, 45);
+    const safeName = escapeHtml(item.name);
+    div.innerHTML = `
+      <span class="priority" title="Priority order">${i + 1}</span>
+      <img src="${tempCanvas.toDataURL()}" alt="${safeName}">
+      <div class="info">
+        <div class="name">${safeName}</div>
+        <div class="dims">${item.width} x ${item.height}${item.autoOverlap ? ` · <span class="overlap-badge">${item.autoOverlap}px duplicate content removed</span>` : ''}${item.redactions.length ? ` · ${item.redactions.length} redacted` : ''}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openCropEditor(${i})">Crop</button>
+      <button class="btn btn-outline btn-sm" onclick="removeImage(${i})">✕</button>`;
+    div.addEventListener('dragstart', (e) => { dragSrcIdx = i; div.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    div.addEventListener('dragend', () => { dragSrcIdx = -1; div.classList.remove('dragging'); });
+    div.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    div.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (dragSrcIdx !== -1 && dragSrcIdx !== i) {
+        const [moved] = images.splice(dragSrcIdx, 1);
+        images.splice(i, 0, moved);
+        applyAutoOverlap();
+        arrangeImages();
+        renderImageList();
+        autoRender();
+      }
+    });
+    imageList.appendChild(div);
+  });
+  undoRedactBtn.disabled = redactionHistory.length === 0;
+}
+
+function removeImage(idx) {
+  const [removed] = images.splice(idx, 1);
+  redactionHistory = redactionHistory.filter(entry => entry.item !== removed);
+  if (images.length === 0) {
+    controls.classList.add('hidden');
+    imageList.classList.add('hidden');
+    previewArea.classList.add('hidden');
+  }
+  applyAutoOverlap();
+  arrangeImages();
+  renderImageList();
+  autoRender();
+}
+
+gapSlider.addEventListener('input', () => {
+  gapVal.textContent = gapSlider.value + 'px';
+});
+
+function updateItemDimensions(item) {
+  const overlapX = directionSelect.value === 'horizontal' ? item.autoOverlap : 0;
+  const overlapY = directionSelect.value === 'vertical' ? item.autoOverlap : 0;
+  item.sourceX = item.crop.left + overlapX;
+  item.sourceY = item.crop.top + overlapY;
+  item.width = Math.max(1, item.originalWidth - item.crop.left - item.crop.right - overlapX);
+  item.height = Math.max(1, item.originalHeight - item.crop.top - item.crop.bottom - overlapY);
+}
+
+function overlapScore(previous, current, overlap, direction) {
+  const sampleCanvas = document.createElement('canvas');
+  const sampleWidth = direction === 'vertical' ? 64 : 18;
+  const sampleHeight = direction === 'vertical' ? 18 : 64;
+  sampleCanvas.width = sampleWidth * 2;
+  sampleCanvas.height = sampleHeight;
+  const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+  const previousWidth = previous.originalWidth - previous.crop.left - previous.crop.right;
+  const previousHeight = previous.originalHeight - previous.crop.top - previous.crop.bottom;
+  const currentWidth = current.originalWidth - current.crop.left - current.crop.right;
+  const currentHeight = current.originalHeight - current.crop.top - current.crop.bottom;
+
+  if (direction === 'vertical') {
+    const sourceWidth = Math.min(previousWidth, currentWidth);
+    const previousX = previous.crop.left + Math.max(0, (previousWidth - sourceWidth) / 2);
+    const currentX = current.crop.left + Math.max(0, (currentWidth - sourceWidth) / 2);
+    sampleCtx.drawImage(previous.img, previousX, previous.crop.top + previousHeight - overlap, sourceWidth, overlap, 0, 0, sampleWidth, sampleHeight);
+    sampleCtx.drawImage(current.img, currentX, current.crop.top, sourceWidth, overlap, sampleWidth, 0, sampleWidth, sampleHeight);
+  } else {
+    const sourceHeight = Math.min(previousHeight, currentHeight);
+    const previousY = previous.crop.top + Math.max(0, (previousHeight - sourceHeight) / 2);
+    const currentY = current.crop.top + Math.max(0, (currentHeight - sourceHeight) / 2);
+    sampleCtx.drawImage(previous.img, previous.crop.left + previousWidth - overlap, previousY, overlap, sourceHeight, 0, 0, sampleWidth, sampleHeight);
+    sampleCtx.drawImage(current.img, current.crop.left, currentY, overlap, sourceHeight, sampleWidth, 0, sampleWidth, sampleHeight);
+  }
+
+  const pixels = sampleCtx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height).data;
+  let difference = 0;
+  let luminanceTotal = 0;
+  let luminanceSquared = 0;
+  const sampleCount = sampleWidth * sampleHeight;
+  for (let y = 0; y < sampleHeight; y++) {
+    for (let x = 0; x < sampleWidth; x++) {
+      const left = (y * sampleCanvas.width + x) * 4;
+      const right = (y * sampleCanvas.width + sampleWidth + x) * 4;
+      difference += Math.abs(pixels[left] - pixels[right]);
+      difference += Math.abs(pixels[left + 1] - pixels[right + 1]);
+      difference += Math.abs(pixels[left + 2] - pixels[right + 2]);
+      const luminance = pixels[left] * 0.2126 + pixels[left + 1] * 0.7152 + pixels[left + 2] * 0.0722;
+      luminanceTotal += luminance;
+      luminanceSquared += luminance * luminance;
+    }
+  }
+  const meanLuminance = luminanceTotal / sampleCount;
+  return {
+    difference: difference / (sampleCount * 3),
+    variance: luminanceSquared / sampleCount - meanLuminance * meanLuminance
+  };
+}
+
+function detectOverlap(previous, current) {
+  const direction = directionSelect.value;
+  const previousSize = direction === 'vertical'
+    ? previous.originalHeight - previous.crop.top - previous.crop.bottom
+    : previous.originalWidth - previous.crop.left - previous.crop.right;
+  const currentSize = direction === 'vertical'
+    ? current.originalHeight - current.crop.top - current.crop.bottom
+    : current.originalWidth - current.crop.left - current.crop.right;
+  const maxOverlap = Math.floor(Math.min(800, previousSize * 0.65, currentSize * 0.65));
+  const step = Math.max(2, Math.floor(maxOverlap / 180));
+  let detected = 0;
+  let bestDifference = Number.POSITIVE_INFINITY;
+  for (let overlap = maxOverlap; overlap >= 24; overlap -= step) {
+    const score = overlapScore(previous, current, overlap, direction);
+    if (score.variance >= 18 && score.difference < bestDifference) {
+      detected = overlap;
+      bestDifference = score.difference;
+    }
+  }
+  if (bestDifference > 7) detected = 0;
+  return detected;
+}
+
+function applyAutoOverlap() {
+  images.forEach(item => {
+    item.autoOverlap = 0;
+    updateItemDimensions(item);
+  });
+  let total = 0;
+  if (autoOverlap.checked) {
+    for (let i = 1; i < images.length; i++) {
+      images[i].autoOverlap = detectOverlap(images[i - 1], images[i]);
+      updateItemDimensions(images[i]);
+      total += images[i].autoOverlap;
+    }
+  }
+  overlapStatus.textContent = total > 0 ? `${total}px duplicate content removed` : 'No duplicate content detected';
+  return total;
+}
+
+function openCropEditor(index) {
+  editingCropIndex = index;
+  const item = images[index];
+  document.getElementById('cropTitle').textContent = `Crop image ${index + 1}`;
+  document.getElementById('cropFileName').textContent = `${item.name} · ${item.originalWidth} × ${item.originalHeight}`;
+  document.getElementById('cropTop').value = item.crop.top;
+  document.getElementById('cropRight').value = item.crop.right;
+  document.getElementById('cropBottom').value = item.crop.bottom;
+  document.getElementById('cropLeft').value = item.crop.left;
+  cropModal.classList.remove('hidden');
+}
+
+function closeCropEditor() {
+  editingCropIndex = -1;
+  cropModal.classList.add('hidden');
+}
+
+document.getElementById('cancelCropBtn').addEventListener('click', closeCropEditor);
+cropModal.addEventListener('click', (event) => {
+  if (event.target === cropModal) closeCropEditor();
+});
+document.getElementById('applyCropBtn').addEventListener('click', () => {
+  const cropIndex = editingCropIndex;
+  const item = images[cropIndex];
+  const crop = {
+    top: Math.max(0, Number(document.getElementById('cropTop').value) || 0),
+    right: Math.max(0, Number(document.getElementById('cropRight').value) || 0),
+    bottom: Math.max(0, Number(document.getElementById('cropBottom').value) || 0),
+    left: Math.max(0, Number(document.getElementById('cropLeft').value) || 0)
+  };
+  if (crop.left + crop.right >= item.originalWidth || crop.top + crop.bottom >= item.originalHeight) {
+    showToolStatus('Crop values must leave part of the image visible.', 'error');
+  } else {
+    item.crop = crop;
+    redactionHistory = redactionHistory.filter(entry => entry.item !== item);
+    item.redactions = [];
+    applyAutoOverlap();
+    arrangeImages();
+    renderImageList();
+    autoRender();
+    closeCropEditor();
+    showToolStatus('Crop applied.', 'success');
+    trackToolEvent('crop_applied', { image_index: cropIndex + 1 });
+  }
+});
+
+/* Layout & Render */
+const SNAP = 10;
+
+function arrangeImages() {
+  const direction = directionSelect.value;
+  const gap = parseInt(gapSlider.value);
+  if (direction === 'vertical') {
+    const maxW = Math.max(...images.map(i => i.width));
+    let y = 0;
+    images.forEach(item => {
+      item.x = Math.round((maxW - item.width) / 2);
+      item.y = y;
+      y += item.height + gap;
+    });
+  } else {
+    const maxH = Math.max(...images.map(i => i.height));
+    let x = 0;
+    images.forEach(item => {
+      item.x = x;
+      item.y = Math.round((maxH - item.height) / 2);
+      x += item.width + gap;
+    });
+  }
+}
+
+function normalizePositions() {
+  if (images.length === 0) return;
+  const minX = Math.min(...images.map(i => i.x));
+  const minY = Math.min(...images.map(i => i.y));
+  if (minX !== 0 || minY !== 0) {
+    images.forEach(i => { i.x -= minX; i.y -= minY; });
+  }
+}
+
+function renderCanvas(highlightIdx) {
+  if (images.length === 0) return;
+  const totalW = Math.max(...images.map(i => i.x + i.width));
+  const totalH = Math.max(...images.map(i => i.y + i.height));
+  canvas.width = totalW;
+  canvas.height = totalH;
+  ctx.fillStyle = bgColor.value;
+  ctx.fillRect(0, 0, totalW, totalH);
+  images.forEach((item, i) => {
+    if (highlightIdx === i) { ctx.globalAlpha = 0.35; }
+    ctx.drawImage(
+      item.img,
+      item.sourceX,
+      item.sourceY,
+      item.width,
+      item.height,
+      item.x,
+      item.y,
+      item.width,
+      item.height
+    );
+    ctx.globalAlpha = 1;
+  });
+  applyRedactions();
+  if (highlightIdx !== undefined && highlightIdx !== -1 && images[highlightIdx]) {
+    const item = images[highlightIdx];
+    ctx.save();
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 4]);
+    ctx.strokeRect(item.x + 1, item.y + 1, item.width - 2, item.height - 2);
+    ctx.restore();
+  }
+}
+
+function autoRender() {
+  if (images.length < 1) {
+    previewArea.classList.add('hidden');
+    return;
+  }
+  renderCanvas();
+  previewArea.classList.remove('hidden');
+  fitZoom();
+}
+
+document.getElementById('stitchBtn').addEventListener('click', () => {
+  applyAutoOverlap();
+  arrangeImages();
+  renderImageList();
+  autoRender();
+});
+directionSelect.addEventListener('change', () => {
+  applyAutoOverlap();
+  arrangeImages();
+  renderImageList();
+  autoRender();
+});
+function applyAutoOverlapPreservingPositions() {
+  const direction = directionSelect.value;
+  const previousSizes = images.map(item => direction === 'vertical' ? item.height : item.width);
+  applyAutoOverlap();
+  let downstreamShift = 0;
+  images.forEach((item, index) => {
+    if (index > 0) {
+      if (direction === 'vertical') {
+        item.y += downstreamShift;
+      } else {
+        item.x += downstreamShift;
+      }
+    }
+    const currentSize = direction === 'vertical' ? item.height : item.width;
+    downstreamShift += currentSize - previousSizes[index];
+  });
+  normalizePositions();
+}
+
+autoOverlap.addEventListener('change', () => {
+  applyAutoOverlapPreservingPositions();
+  renderImageList();
+  autoRender();
+});
+qualitySlider.addEventListener('input', () => {
+  qualityVal.textContent = `${qualitySlider.value}%`;
+});
+outputFormat.addEventListener('change', () => {
+  qualityControl.classList.toggle('hidden', outputFormat.value === 'png');
+});
+bgColor.addEventListener('input', () => { renderCanvas(); setZoom(zoomLevel); });
+
+/* Zoom */
+let zoomLevel = 1;
+const zoomValEl = document.getElementById('zoomVal');
+const viewport = document.getElementById('canvasViewport');
+
+function setZoom(level) {
+  zoomLevel = Math.max(0.1, Math.min(5, level));
+  canvas.style.transform = `scale(${zoomLevel})`;
+  canvas.style.width = canvas.width + 'px';
+  canvas.style.height = canvas.height + 'px';
+  viewport.style.width = '100%';
+  viewport.style.height = Math.min(600, canvas.height * zoomLevel + 20) + 'px';
+  zoomValEl.textContent = Math.round(zoomLevel * 100) + '%';
+}
+
+function fitZoom() {
+  if (canvas.width === 0 || canvas.height === 0) return;
+  const containerW = viewport.parentElement.clientWidth - 40;
+  const maxH = 600;
+  const ratioW = containerW / canvas.width;
+  const ratioH = maxH / canvas.height;
+  setZoom(Math.min(ratioW, ratioH, 1));
+}
+
+document.getElementById('zoomInBtn').addEventListener('click', () => setZoom(zoomLevel + 0.1));
+document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom(zoomLevel - 0.1));
+document.getElementById('zoomResetBtn').addEventListener('click', fitZoom);
+
+viewport.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.05 : 0.05;
+  setZoom(zoomLevel + delta);
+}, { passive: false });
+
+/* Canvas free-drag to move images */
+let dragIdx = -1, isDragging = false, dragStartCX = 0, dragStartCY = 0, dragOrigX = 0, dragOrigY = 0;
+
+function getImageIndexAt(cx, cy) {
+  for (let i = images.length - 1; i >= 0; i--) {
+    const item = images[i];
+    if (cx >= item.x && cx <= item.x + item.width && cy >= item.y && cy <= item.y + item.height) return i;
+  }
+  return -1;
+}
+
+function canvasCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+function snapPosition(idx, nx, ny) {
+  const item = images[idx];
+  const edges = { left: nx, right: nx + item.width, top: ny, bottom: ny + item.height,
+                  cx: nx + item.width / 2, cy: ny + item.height / 2 };
+  let sx = nx, sy = ny;
+  images.forEach((other, i) => {
+    if (i === idx) return;
+    const oe = { left: other.x, right: other.x + other.width, top: other.y, bottom: other.y + other.height,
+                 cx: other.x + other.width / 2, cy: other.y + other.height / 2 };
+    if (Math.abs(edges.left - oe.left) < SNAP) sx = oe.left;
+    else if (Math.abs(edges.left - oe.right) < SNAP) sx = oe.right;
+    else if (Math.abs(edges.right - oe.right) < SNAP) sx = oe.right - item.width;
+    else if (Math.abs(edges.right - oe.left) < SNAP) sx = oe.left - item.width;
+    else if (Math.abs(edges.cx - oe.cx) < SNAP) sx = oe.cx - item.width / 2;
+    if (Math.abs(edges.top - oe.top) < SNAP) sy = oe.top;
+    else if (Math.abs(edges.top - oe.bottom) < SNAP) sy = oe.bottom;
+    else if (Math.abs(edges.bottom - oe.bottom) < SNAP) sy = oe.bottom - item.height;
+    else if (Math.abs(edges.bottom - oe.top) < SNAP) sy = oe.top - item.height;
+    else if (Math.abs(edges.cy - oe.cy) < SNAP) sy = oe.cy - item.height / 2;
+  });
+  return { x: Math.round(sx), y: Math.round(sy) };
+}
+
+function drawSnapGuides(idx) {
+  const item = images[idx];
+  const ie = { left: item.x, right: item.x + item.width, top: item.y, bottom: item.y + item.height,
+               cx: item.x + item.width / 2, cy: item.y + item.height / 2 };
+  ctx.save();
+  ctx.strokeStyle = 'rgba(251,191,36,0.6)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  images.forEach((other, i) => {
+    if (i === idx) return;
+    const oe = { left: other.x, right: other.x + other.width, top: other.y, bottom: other.y + other.height,
+                 cx: other.x + other.width / 2, cy: other.y + other.height / 2 };
+    const pairs = [[ie.left, oe.left],[ie.left, oe.right],[ie.right, oe.right],[ie.right, oe.left],[ie.cx, oe.cx]];
+    pairs.forEach(([a, b]) => { if (a === b) { ctx.beginPath(); ctx.moveTo(a, 0); ctx.lineTo(a, canvas.height); ctx.stroke(); } });
+    const pairsY = [[ie.top, oe.top],[ie.top, oe.bottom],[ie.bottom, oe.bottom],[ie.bottom, oe.top],[ie.cy, oe.cy]];
+    pairsY.forEach(([a, b]) => { if (a === b) { ctx.beginPath(); ctx.moveTo(0, a); ctx.lineTo(canvas.width, a); ctx.stroke(); } });
+  });
+  ctx.restore();
+}
+
+function applyRedactions() {
+  images.forEach(item => {
+    item.redactions.forEach(redaction => {
+      const x = Math.round(item.x + redaction.x);
+      const y = Math.round(item.y + redaction.y);
+      const width = Math.max(1, Math.round(redaction.width));
+      const height = Math.max(1, Math.round(redaction.height));
+      if (redaction.style === 'black') {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x, y, width, height);
+      } else {
+        const pixelCanvas = document.createElement('canvas');
+        const pixelWidth = Math.max(1, Math.ceil(width / 12));
+        const pixelHeight = Math.max(1, Math.ceil(height / 12));
+        pixelCanvas.width = pixelWidth;
+        pixelCanvas.height = pixelHeight;
+        const pixelCtx = pixelCanvas.getContext('2d');
+        pixelCtx.drawImage(canvas, x, y, width, height, 0, 0, pixelWidth, pixelHeight);
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(pixelCanvas, 0, 0, pixelWidth, pixelHeight, x, y, width, height);
+        ctx.restore();
+      }
+    });
+  });
+}
+
+function drawDraftRedaction() {
+  if (draftRedaction) {
+    const item = images[draftRedaction.index];
+    const left = Math.min(draftRedaction.startX, draftRedaction.endX);
+    const top = Math.min(draftRedaction.startY, draftRedaction.endY);
+    const width = Math.abs(draftRedaction.endX - draftRedaction.startX);
+    const height = Math.abs(draftRedaction.endY - draftRedaction.startY);
+    ctx.save();
+    ctx.fillStyle = 'rgba(15,23,42,0.45)';
+    ctx.fillRect(item.x + left, item.y + top, width, height);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(item.x + left, item.y + top, width, height);
+    ctx.restore();
+  }
+}
+
+function setRedactMode(enabled) {
+  redactMode = enabled;
+  draftRedaction = null;
+  redactBtn.classList.toggle('is-active', enabled);
+  redactBtn.textContent = enabled ? 'Finish redacting' : 'Redact sensitive info';
+  canvas.style.cursor = enabled ? 'crosshair' : '';
+  if (enabled) {
+    showToolStatus('Drag over sensitive details in the preview.', 'info');
+  } else {
+    showToolStatus('Redaction mode closed.');
+  }
+}
+
+redactBtn.addEventListener('click', () => setRedactMode(!redactMode));
+undoRedactBtn.addEventListener('click', () => {
+  const entry = redactionHistory.pop();
+  if (entry) {
+    const index = entry.item.redactions.lastIndexOf(entry.redaction);
+    if (index !== -1) entry.item.redactions.splice(index, 1);
+    renderCanvas();
+    renderImageList();
+    showToolStatus('Last redaction removed.');
+  } else {
+    showToolStatus('There is no redaction to undo.');
+  }
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  const { x, y } = canvasCoords(e);
+  const idx = getImageIndexAt(x, y);
+  if (redactMode && idx !== -1) {
+    const item = images[idx];
+    draftRedaction = {
+      index: idx,
+      startX: Math.max(0, Math.min(item.width, x - item.x)),
+      startY: Math.max(0, Math.min(item.height, y - item.y)),
+      endX: Math.max(0, Math.min(item.width, x - item.x)),
+      endY: Math.max(0, Math.min(item.height, y - item.y))
+    };
+    e.stopPropagation();
+    e.preventDefault();
+  } else if (idx !== -1) {
+    dragIdx = idx;
+    isDragging = false;
+    dragStartCX = x;
+    dragStartCY = y;
+    dragOrigX = images[idx].x;
+    dragOrigY = images[idx].y;
+    e.stopPropagation();
+    e.preventDefault();
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (redactMode) {
+    if (draftRedaction) {
+      const { x, y } = canvasCoords(e);
+      const item = images[draftRedaction.index];
+      draftRedaction.endX = Math.max(0, Math.min(item.width, x - item.x));
+      draftRedaction.endY = Math.max(0, Math.min(item.height, y - item.y));
+      renderCanvas();
+      drawDraftRedaction();
+      setZoom(zoomLevel);
+      e.preventDefault();
+    }
+    canvas.style.cursor = 'crosshair';
+  } else if (dragIdx === -1) {
+    if (!vpDrag) {
+      const rect = canvas.getBoundingClientRect();
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (inside) {
+        const { x, y } = canvasCoords(e);
+        canvas.style.cursor = getImageIndexAt(x, y) !== -1 ? 'grab' : '';
+      }
+    }
+  } else {
+    isDragging = true;
+    const { x, y } = canvasCoords(e);
+    const dx = x - dragStartCX;
+    const dy = y - dragStartCY;
+    const snapped = snapPosition(dragIdx, dragOrigX + dx, dragOrigY + dy);
+    images[dragIdx].x = snapped.x;
+    images[dragIdx].y = snapped.y;
+    renderCanvas(dragIdx);
+    drawSnapGuides(dragIdx);
+    setZoom(zoomLevel);
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (redactMode && draftRedaction) {
+    const item = images[draftRedaction.index];
+    const redaction = {
+      x: Math.min(draftRedaction.startX, draftRedaction.endX),
+      y: Math.min(draftRedaction.startY, draftRedaction.endY),
+      width: Math.abs(draftRedaction.endX - draftRedaction.startX),
+      height: Math.abs(draftRedaction.endY - draftRedaction.startY),
+      style: redactStyle.value
+    };
+    if (redaction.width >= 5 && redaction.height >= 5) {
+      item.redactions.push(redaction);
+      redactionHistory.push({ item, redaction });
+      undoRedactBtn.disabled = false;
+      renderImageList();
+      showToolStatus('Sensitive area redacted.', 'success');
+      trackToolEvent('redaction_applied', { redaction_style: redaction.style });
+    }
+    draftRedaction = null;
+    renderCanvas();
+    setZoom(zoomLevel);
+  } else if (dragIdx !== -1) {
+    normalizePositions();
+    renderCanvas();
+    setZoom(zoomLevel);
+    dragIdx = -1;
+    isDragging = false;
+    canvas.style.cursor = '';
+  } else {
+    vpDrag = false;
+  }
+});
+
+/* Viewport drag to pan */
+let vpDrag = false, vpStartX = 0, vpStartY = 0, vpScrollX = 0, vpScrollY = 0;
+viewport.addEventListener('mousedown', (e) => {
+  if (!redactMode && !isDragging && dragIdx === -1) {
+    vpDrag = true;
+    vpStartX = e.clientX;
+    vpStartY = e.clientY;
+    vpScrollX = viewport.scrollLeft;
+    vpScrollY = viewport.scrollTop;
+  }
+});
+window.addEventListener('mousemove', (e) => {
+  if (!vpDrag || isDragging) return;
+  viewport.scrollLeft = vpScrollX - (e.clientX - vpStartX);
+  viewport.scrollTop = vpScrollY - (e.clientY - vpStartY);
+});
+
+/* Download */
+function canvasToBlob(type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error('The browser could not create the export file.'));
+      }
+    }, type, quality);
+  });
+}
+
+function triggerBlobDownload(blob, filename) {
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+}
+
+async function exportPdf(quality) {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    throw new Error('PDF support did not load. Check your connection and try again.');
+  }
+  const { jsPDF } = window.jspdf;
+  const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+  const pdf = new jsPDF({ orientation, unit: 'pt', format: 'a4', compress: true });
+  const margin = 24;
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const drawWidth = pageWidth - margin * 2;
+  const scale = drawWidth / canvas.width;
+  const sliceHeight = Math.max(1, Math.floor((pageHeight - margin * 2) / scale));
+  let page = 0;
+  for (let sourceY = 0; sourceY < canvas.height; sourceY += sliceHeight) {
+    const currentHeight = Math.min(sliceHeight, canvas.height - sourceY);
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = currentHeight;
+    const pageCtx = pageCanvas.getContext('2d');
+    pageCtx.fillStyle = bgColor.value;
+    pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+    pageCtx.drawImage(canvas, 0, sourceY, canvas.width, currentHeight, 0, 0, canvas.width, currentHeight);
+    if (page > 0) pdf.addPage('a4', orientation);
+    pdf.addImage(pageCanvas.toDataURL('image/jpeg', quality), 'JPEG', margin, margin, drawWidth, currentHeight * scale, undefined, 'FAST');
+    page++;
+  }
+  pdf.save(`stitched_${images.length}_images.pdf`);
+}
+
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+  const format = outputFormat.value;
+  const quality = Number(qualitySlider.value) / 100;
+  showToolStatus('Creating your export…', 'info');
+  try {
+    if (format === 'pdf') {
+      await exportPdf(quality);
+    } else {
+      const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const blob = await canvasToBlob(mimeType, quality);
+      triggerBlobDownload(blob, `stitched_${images.length}_images.${format === 'jpeg' ? 'jpg' : 'png'}`);
+    }
+    const overlapRemoved = images.reduce((total, item) => total + item.autoOverlap, 0);
+    const redactionCount = images.reduce((total, item) => total + item.redactions.length, 0);
+    showToolStatus('Export complete.', 'success');
+    trackToolEvent('export_success', {
+      export_format: format,
+      file_count: images.length,
+      overlap_removed: overlapRemoved,
+      redaction_count: redactionCount
+    });
+  } catch (error) {
+    showToolStatus(error.message, 'error');
+    trackToolEvent('tool_error', { error_type: `${format}_export_failed` });
+  }
+});
+
+/* Clear */
+document.getElementById('clearBtn').addEventListener('click', () => {
+  images.length = 0;
+  controls.classList.add('hidden');
+  imageList.classList.add('hidden');
+  previewArea.classList.add('hidden');
+  imageList.innerHTML = '';
+  fileInput.value = '';
+  redactionHistory = [];
+  undoRedactBtn.disabled = true;
+  setRedactMode(false);
+  overlapStatus.textContent = 'No duplicate content detected';
+});
+
+/* FAQ Toggle */
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+});
+</script>
+
+
+<script>document.querySelectorAll(".current-year").forEach(function (el) { el.textContent = new Date().getFullYear(); });</script>
+
+<footer class="open-source-attribution" style="padding:24px;text-align:center"><a href="https://upliftorch.com/">Upliftorch</a> · <a href="https://upliftorch.com/tools/screenshot-stitch/">Official demo / 線上工具</a></footer>
+</body>
+</html>
