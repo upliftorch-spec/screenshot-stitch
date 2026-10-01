@@ -457,7 +457,7 @@ function handleFiles(fileList) {
   const remaining = 20 - images.length;
   const toAdd = imageFiles.slice(0, remaining);
   if (toAdd.length === 0) {
-    trackToolEvent('tool_error', { error_type: 'invalid_or_excess_files' });
+    ;
     return;
   }
 
@@ -474,7 +474,7 @@ function handleFiles(fileList) {
       arrangeImages();
       renderImageList();
       autoRender();
-      trackToolEvent('file_selected', { file_count: loaded });
+      ;
     }
   };
   toAdd.forEach((f, fileIndex) => {
@@ -502,7 +502,7 @@ function handleFiles(fileList) {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      trackToolEvent('tool_error', { error_type: 'image_decode_failed' });
+      ;
       finishBatch();
     };
     img.src = url;
@@ -716,7 +716,7 @@ document.getElementById('applyCropBtn').addEventListener('click', () => {
     autoRender();
     closeCropEditor();
     showToolStatus('Crop applied.', 'success');
-    trackToolEvent('crop_applied', { image_index: cropIndex + 1 });
+    ;
   }
 });
 
@@ -1091,7 +1091,7 @@ window.addEventListener('mouseup', () => {
       undoRedactBtn.disabled = false;
       renderImageList();
       showToolStatus('Sensitive area redacted.', 'success');
-      trackToolEvent('redaction_applied', { redaction_style: redaction.style });
+      ;
     }
     draftRedaction = null;
     renderCanvas();
@@ -1191,15 +1191,10 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     const overlapRemoved = images.reduce((total, item) => total + item.autoOverlap, 0);
     const redactionCount = images.reduce((total, item) => total + item.redactions.length, 0);
     showToolStatus('Export complete.', 'success');
-    trackToolEvent('export_success', {
-      export_format: format,
-      file_count: images.length,
-      overlap_removed: overlapRemoved,
-      redaction_count: redactionCount
-    });
+    ;
   } catch (error) {
     showToolStatus(error.message, 'error');
-    trackToolEvent('tool_error', { error_type: `${format}_export_failed` });
+    ;
   }
 });
 
